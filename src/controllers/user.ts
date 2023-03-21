@@ -31,6 +31,7 @@ import {
   InvalidTokenError,
   WeakPasswordError,
 } from '../errors';
+import { isEmpty } from 'lodash';
 
 export const issueSessionOrRedirectController = async (
   req: Request,
@@ -463,9 +464,14 @@ export const postSignInWithMagicLinkController = async (
     next();
   } catch (error) {
     if (error instanceof InvalidMagicLinkError || error instanceof ZodError) {
+      if (isEmpty(req.session.email)) {
+        return res.redirect(
+          `/users/start-sign-in?notification=invalid_magic_link`
+        );
+      }
       return res.redirect(
-        `/users/start-sign-in?notification=invalid_magic_link`
-      );
+        `/users/sign-in?notification=invalid_magic_link_with_reinit`
+      )
     }
 
     next(error);
